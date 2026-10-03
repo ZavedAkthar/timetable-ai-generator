@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block title %}Constraints | Timetable AI{% endblock %}
+{% block page_title %}Constraints{% endblock %}
+
+{% block content %}
+<div class="card constraint-card">
+    <h3>Hard constraints</h3>
+    <p class="muted">These rules are always enforced and can never be violated.</p>
+    <ul class="constraint-list">
+        {% for c in hard %}
+        <li>
+            <div><strong>{{ c.name }}</strong><span>{{ c.description }}</span></div>
+            <span class="badge badge-available">Always on</span>
+        </li>
+        {% endfor %}
+    </ul>
+</div>
+
+<form method="post" action="{{ url_for('constraints.save') }}" class="card constraint-card">
+    <h3>Soft constraints</h3>
+    <p class="muted">The optimizer tries to minimize these. Switch them on or off and set a priority from 1 (low) to 10 (high).</p>
+    <ul class="constraint-list">
+        {% for c in soft %}
+        <li>
+            <div><strong>{{ c.name }}</strong><span>{{ c.description }}</span></div>
+            <div class="constraint-controls">
+                <label><input type="checkbox" name="enabled_{{ c.id }}" {% if c.is_enabled %}checked{% endif %}> Enabled</label>
+                <label>Priority <input type="number" name="weight_{{ c.id }}" min="1" max="10" value="{{ c.weight }}"></label>
+            </div>
+        </li>
+        {% endfor %}
+    </ul>
+    <button class="btn btn-accent" type="submit">Save Constraints</button>
+</form>
+{% endblock %}

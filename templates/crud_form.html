@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} | Timetable AI{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="card form-card">
+    {% if errors %}
+    <div class="flash flash-error">
+        <ul>{% for e in errors %}<li>{{ e }}</li>{% endfor %}</ul>
+    </div>
+    {% endif %}
+
+    <form method="post" class="form-grid">
+        {% for f in fields %}
+        <label>{{ f.label }}
+            {% if f.type == 'select' %}
+            <select name="{{ f.name }}" required>
+                {% for value, text in f.options %}
+                <option value="{{ value }}" {% if form.get(f.name, '')|string == value|string %}selected{% endif %}>{{ text }}</option>
+                {% else %}
+                <option value="">No options available - add some first</option>
+                {% endfor %}
+            </select>
+            {% elif f.type == 'number' %}
+            <input type="number" name="{{ f.name }}" min="{{ f.min }}" max="{{ f.max }}" value="{{ form.get(f.name, '') }}" required>
+            {% else %}
+            <input type="text" name="{{ f.name }}" value="{{ form.get(f.name, '') }}" required>
+            {% endif %}
+        </label>
+        {% endfor %}
+        <div class="form-actions full">
+            <button type="submit" class="btn btn-accent">Save {{ cfg.singular }}</button>
+            <a href="{{ url_for(list_url) }}" class="btn btn-light">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

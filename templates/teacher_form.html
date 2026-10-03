@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} | Timetable AI{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="card form-card">
+    {% if errors %}
+    <div class="flash flash-error">
+        <ul>{% for e in errors %}<li>{{ e }}</li>{% endfor %}</ul>
+    </div>
+    {% endif %}
+
+    <form method="post" class="form-grid">
+        <label>Name
+            <input type="text" name="name" value="{{ form.name }}" required>
+        </label>
+        <label>Email
+            <input type="email" name="email" value="{{ form.email }}" required>
+        </label>
+        <label>Department
+            <input type="text" name="department" value="{{ form.department }}" required>
+        </label>
+        <label>Designation
+            <input type="text" name="designation" value="{{ form.designation }}" required>
+        </label>
+        <label>Max Hours Per Day
+            <input type="number" name="max_hours_per_day" min="1" max="8" value="{{ form.max_hours_per_day }}" required>
+        </label>
+        <label>Max Hours Per Week
+            <input type="number" name="max_hours_per_week" min="1" max="48" value="{{ form.max_hours_per_week }}" required>
+        </label>
+        <label class="full">Availability
+            <select name="status">
+                {% for s in statuses %}
+                <option value="{{ s }}" {% if form.status == s %}selected{% endif %}>{{ s }}</option>
+                {% endfor %}
+            </select>
+        </label>
+        <div class="form-actions full">
+            <button type="submit" class="btn btn-accent">Save Teacher</button>
+            <a href="{{ url_for('teachers.list_teachers') }}" class="btn btn-light">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

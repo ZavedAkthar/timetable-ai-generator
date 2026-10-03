@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% from "_icons.html" import icon %}
+
+{% block title %}Timetable | Timetable AI{% endblock %}
+{% block page_title %}Timetable{% endblock %}
+
+{% block content %}
+<div class="toolbar">
+    <form method="get" class="search-form">
+        <select name="view" onchange="this.form.elements['item'].disabled = true; this.form.submit();">
+            {% for key, label in view_choices %}
+            <option value="{{ key }}" {% if key == view %}selected{% endif %}>By {{ label }}</option>
+            {% endfor %}
+        </select>
+        <select name="item" onchange="this.form.submit();">
+            {% for o in options %}
+            <option value="{{ o.id }}" {% if o.id == selected %}selected{% endif %}>{{ o.name }}</option>
+            {% else %}
+            <option value="">No records</option>
+            {% endfor %}
+        </select>
+    </form>
+    <form method="post" action="{{ url_for('timetable.generate') }}">
+        <button class="btn btn-accent" type="submit">{{ icon('sparkles') }} Generate Optimized Timetable</button>
+    </form>
+</div>
+
+<div class="card table-card">
+    <div class="table-wrap">
+        <table class="table tt-grid">
+            <thead>
+                <tr>
+                    <th>Time</th>
+                    {% for d in days %}<th>{{ d[:3] }}</th>{% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for slot in slots %}
+                <tr>
+                    <td class="tt-time">{{ slot.start }}<br>{{ slot.end }}</td>
+                    {% for d in days %}
+                    {% set cell = grid.get(d ~ '-' ~ slot.period) %}
+                    <td>
+                        {% if cell %}
+                        <div class="tt-cell">
+                            <strong>{{ cell.subject }}</strong>
+                            {% if view == 'class' %}
+                            <span>{{ cell.teacher }}</span>
+                            {% elif view == 'teacher' %}
+                            <span>{{ cell.class_name }}</span>
+                            {% else %}
+                            <span>{{ cell.class_name }} | {{ cell.teacher }}</span>
+                            {% endif %}
+                            {% if view != 'room' %}<span>{{ cell.room }}</span>{% endif %}
+                        </div>
+                        {% endif %}
+                    </td>
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% if not grid %}
+    <p class="empty-note">No timetable entries for this selection yet.</p>
+    {% endif %}
+</div>
+{% endblock %}

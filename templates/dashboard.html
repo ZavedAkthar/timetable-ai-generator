@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% from "_icons.html" import icon %}
+
+{% block title %}Dashboard | Timetable AI{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+<div id="glyph-field" class="glyph-field"></div>
+
+<section class="hero">
+    <div class="callout">
+        <span class="pill">How it works</span>
+        Add teachers, classes, subjects and rooms first, then generate your timetable.
+    </div>
+    <h1>Welcome back!</h1>
+    <p>Manage your academic schedule and generate optimized timetables.</p>
+    <a href="/timetable" class="btn btn-accent">{{ icon('sparkles') }} Generate Timetable</a>
+</section>
+
+{% if counts %}
+{% set stats = [
+    ('Total Teachers', counts.teachers, 'users'),
+    ('Total Subjects', counts.subjects, 'book'),
+    ('Total Classes', counts.classes, 'cap'),
+    ('Available Rooms', counts.rooms, 'door')] %}
+<section class="stats">
+    {% for label, value, ico in stats %}
+    <div class="card stat">
+        <div class="stat-icon">{{ icon(ico) }}</div>
+        <div>
+            <div class="stat-label">{{ label }}</div>
+            <div class="stat-value">{{ value }}</div>
+        </div>
+    </div>
+    {% endfor %}
+</section>
+{% else %}
+<div class="alert">Could not load data. Please check the database connection.</div>
+{% endif %}
+{% endblock %}
