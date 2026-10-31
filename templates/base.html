@@ -1,73 +1,114 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+
     <title>{% block title %}Timetable AI{% endblock %}</title>
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&family=Newsreader:wght@600;700&display=swap" rel="stylesheet">
+
+    <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&family=Newsreader:wght@600;700&display=swap"
+        rel="stylesheet">
+
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
+
 <body>
-<div class="orb" aria-hidden="true"></div>
-{% from "_icons.html" import icon %}
-{% set main_nav = [
-    ('Dashboard', '/', 'dashboard'),
-    ('Teachers', '/teachers', 'users'),
-    ('Subjects', '/subjects', 'book'),
-    ('Classes', '/classes', 'cap'),
-    ('Rooms', '/rooms', 'door')] %}
-{% set opt_nav = [
-    ('Constraints', '/constraints', 'settings'),
-    ('Timetable', '/timetable', 'calendar')] %}
 
-<aside class="sidebar">
-    <div class="brand">
-        <div class="brand-title">Timetable AI</div>
-        <div class="brand-sub">Optimization Engine</div>
-    </div>
+    <div class="orb" aria-hidden="true"></div>
 
-    <nav class="nav">
-        <div class="nav-label">Main</div>
-        {% for label, href, ico in main_nav %}
-        <a href="{{ href }}" class="nav-link {% if request.path == href or (href != '/' and request.path.startswith(href)) %}active{% endif %}">
-            {{ icon(ico) }}<span>{{ label }}</span>
-        </a>
-        {% endfor %}
+    {% from "_icons.html" import icon %}
 
-        <div class="nav-label">Optimization</div>
-        {% for label, href, ico in opt_nav %}
-        <a href="{{ href }}" class="nav-link {% if request.path == href or (href != '/' and request.path.startswith(href)) %}active{% endif %}">
-            {{ icon(ico) }}<span>{{ label }}</span>
-        </a>
-        {% endfor %}
-    </nav>
+    {% set main_nav = [
+        ('Dashboard', '/', 'dashboard'),
+        ('Teachers', '/teachers', 'users'),
+        ('Subjects', '/subjects', 'book'),
+        ('Classes', '/classes', 'cap'),
+        ('Rooms', '/rooms', 'door'),
+        ('Bulk Import', '/imports/', 'book')
+    ] %}
 
-    <div class="sidebar-footer">
-        <span class="status-dot"></span><span>System Ready</span>
-    </div>
-</aside>
+    {% set opt_nav = [
+        ('Constraints', '/constraints', 'settings'),
+        ('Timetable', '/timetable', 'calendar')
+    ] %}
 
-<div class="main">
-    <header class="topbar">
-        <h2 class="page-title">{% block page_title %}Dashboard{% endblock %}</h2>
-        <div class="topbar-right">
-            <button class="icon-btn" type="button" aria-label="Notifications">{{ icon('bell') }}</button>
-            <div class="avatar">A</div>
+    <aside class="sidebar">
+
+        <div class="brand">
+            <div class="brand-title">Timetable AI</div>
+            <div class="brand-sub">Optimization Engine</div>
         </div>
-    </header>
 
-    <main class="content">
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% for category, message in messages %}
-            <div class="flash flash-{{ category }}">{{ message }}</div>
+        <nav class="nav">
+
+            <div class="nav-label">Main</div>
+
+            {% for label, href, ico in main_nav %}
+            <a href="{{ href }}"
+               class="nav-link {% if request.path == href or (href != '/' and request.path.startswith(href)) %}active{% endif %}">
+                {{ icon(ico) }}
+                <span>{{ label }}</span>
+            </a>
             {% endfor %}
-        {% endwith %}
-        {% block content %}{% endblock %}
-    </main>
-</div>
 
-<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+            <div class="nav-label">Optimization</div>
+
+            {% for label, href, ico in opt_nav %}
+            <a href="{{ href }}"
+               class="nav-link {% if request.path == href or (href != '/' and request.path.startswith(href)) %}active{% endif %}">
+                {{ icon(ico) }}
+                <span>{{ label }}</span>
+            </a>
+            {% endfor %}
+
+        </nav>
+
+        <div class="sidebar-footer">
+            <span class="status-dot"></span>
+            <span>System Ready</span>
+        </div>
+
+    </aside>
+
+    <div class="main">
+
+        <header class="topbar">
+
+            <h2 class="page-title">
+                {% block page_title %}Dashboard{% endblock %}
+            </h2>
+
+            <div class="topbar-right">
+                <button class="icon-btn" type="button" aria-label="Notifications">
+                    {{ icon('bell') }}
+                </button>
+
+                <div class="avatar">A</div>
+            </div>
+
+        </header>
+
+        <main class="content">
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% for category, message in messages %}
+                <div class="flash flash-{{ category }}">
+                    {{ message }}
+                </div>
+                {% endfor %}
+            {% endwith %}
+
+            {% block content %}{% endblock %}
+
+        </main>
+
+    </div>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+
 </body>
 </html>

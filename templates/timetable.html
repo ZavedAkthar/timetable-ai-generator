@@ -12,6 +12,7 @@
             <option value="{{ key }}" {% if key == view %}selected{% endif %}>By {{ label }}</option>
             {% endfor %}
         </select>
+
         <select name="item" onchange="this.form.submit();">
             {% for o in options %}
             <option value="{{ o.id }}" {% if o.id == selected %}selected{% endif %}>{{ o.name }}</option>
@@ -20,9 +21,24 @@
             {% endfor %}
         </select>
     </form>
-    <form method="post" action="{{ url_for('timetable.generate') }}">
-        <button class="btn btn-accent" type="submit">{{ icon('sparkles') }} Generate Optimized Timetable</button>
-    </form>
+
+    <div class="toolbar-actions" style="display:flex; gap:10px; flex-wrap:wrap;">
+        <a class="btn btn-outline"
+           href="{{ url_for('timetable.download_pdf', view=view, item=selected) }}">
+            ↓ Download PDF
+        </a>
+
+        <a class="btn btn-outline"
+           href="{{ url_for('timetable.download_excel', view=view, item=selected) }}">
+            ↓ Download Excel
+        </a>
+
+        <form method="post" action="{{ url_for('timetable.generate') }}">
+            <button class="btn btn-accent" type="submit">
+                {{ icon('sparkles') }} Generate Optimized Timetable
+            </button>
+        </form>
+    </div>
 </div>
 
 <div class="card table-card">
@@ -31,27 +47,56 @@
             <thead>
                 <tr>
                     <th>Time</th>
-                    {% for d in days %}<th>{{ d[:3] }}</th>{% endfor %}
+                    {% for d in days %}
+                    <th>{{ d[:3] }}</th>
+                    {% endfor %}
                 </tr>
             </thead>
+
             <tbody>
                 {% for slot in slots %}
                 <tr>
-                    <td class="tt-time">{{ slot.start }}<br>{{ slot.end }}</td>
+                    <td class="tt-time">
+                        {{ slot.start }}<br>
+                        {{ slot.end }}
+                    </td>
+
                     {% for d in days %}
                     {% set cell = grid.get(d ~ '-' ~ slot.period) %}
+
                     <td>
                         {% if cell %}
                         <div class="tt-cell">
                             <strong>{{ cell.subject }}</strong>
+
                             {% if view == 'class' %}
                             <span>{{ cell.teacher }}</span>
+
                             {% elif view == 'teacher' %}
                             <span>{{ cell.class_name }}</span>
+
                             {% else %}
-                            <span>{{ cell.class_name }} | {{ cell.teacher }}</span>
+                            <span>
+                                {{ cell.class_name }} | {{ cell.teacher }}
+                            </span>
                             {% endif %}
-                            {% if view != 'room' %}<span>{{ cell.room }}</span>{% endif %}
+
+                            {% if view != 'room' %}
+                            <span>{{ cell.room }}</span>
+                            {% endif %}
+
+                            <button
+                                type="button"
+                                class="btn btn-outline tt-edit-btn"
+                                data-entry-id="{{ cell.timetable_id }}"
+                                data-day="{{ cell.day }}"
+                                data-period="{{ cell.period }}"
+                                data-subject="{{ cell.subject_id }}"
+                                data-teacher="{{ cell.teacher_id }}"
+                                data-room="{{ cell.room_id }}"
+                                data-class-id="{{ cell.class_id }}">
+                                ✎ Edit
+                            </button>
                         </div>
                         {% endif %}
                     </td>
@@ -61,8 +106,266 @@
             </tbody>
         </table>
     </div>
+
     {% if not grid %}
-    <p class="empty-note">No timetable entries for this selection yet.</p>
+    <p class="empty-note">
+        No timetable entries for this selection yet.
+    </p>
     {% endif %}
 </div>
+
+<!-- Manual Edit Dialog -->
+<dialog id="timetableEditDialog" class="tt-edit-dialog">
+
+    <form
+        method="post"
+        id="timetableEditForm"
+        action="{{ url_for('timetable.edit_entry', entry_id=0) }}">
+
+        <div class="tt-dialog-header">
+            <div>
+                <h3>Edit timetable entry</h3>
+                <p>Changes are checked for timetable conflicts before saving.</p>
+            </div>
+
+            <button
+                type="button"
+                class="tt-close-btn"
+                id="closeTimetableDialog"
+                aria-label="Close">
+                ×
+            </button>
+        </div>
+
+        <input type="hidden" name="view" value="{{ view }}">
+        <input type="hidden" name="item" value="{{ selected }}">
+
+        <label for="editDay">Day</label>
+        <select id="editDay" name="day" required>
+            {% for day in days %}
+            <option value="{{ day }}">{{ day }}</option>
+            {% endfor %}
+        </select>
+
+        <label for="editPeriod">Period</label>
+        <select id="editPeriod" name="period" required>
+            {% for slot in slots %}
+            <option value="{{ slot.period }}">
+                Period {{ slot.period }} ({{ slot.start }}–{{ slot.end }})
+            </option>
+            {% endfor %}
+        </select>
+
+        <label for="editSubject">Subject</label>
+        <select id="editSubject" name="subject_id" required>
+            {% for subject in edit_subjects %}
+            <option
+                value="{{ subject.id }}"
+                data-class-id="{{ subject.class_id }}">
+                {{ subject.name }}
+            </option>
+            {% endfor %}
+        </select>
+
+        <label for="editTeacher">Teacher</label>
+        <select id="editTeacher" name="teacher_id" required>
+            {% for teacher in edit_teachers %}
+            <option
+                value="{{ teacher.id }}"
+                {% if teacher.status != 'Available' %}disabled{% endif %}>
+                {{ teacher.name }}
+                {% if teacher.status != 'Available' %}
+                ({{ teacher.status }})
+                {% endif %}
+            </option>
+            {% endfor %}
+        </select>
+
+        <label for="editRoom">Room</label>
+        <select id="editRoom" name="room_id" required>
+            {% for room in edit_rooms %}
+            <option
+                value="{{ room.id }}"
+                {% if not room.is_available %}disabled{% endif %}>
+                {{ room.name }}
+                {% if not room.is_available %}
+                (Unavailable)
+                {% endif %}
+            </option>
+            {% endfor %}
+        </select>
+
+        <div class="tt-dialog-actions">
+            <button
+                type="button"
+                class="btn btn-outline"
+                id="cancelTimetableEdit">
+                Cancel
+            </button>
+
+            <button type="submit" class="btn btn-accent">
+                Save Changes
+            </button>
+        </div>
+
+    </form>
+</dialog>
+
+<style>
+.tt-edit-btn {
+    margin-top: 7px;
+    padding: 4px 9px;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.tt-edit-dialog {
+    width: min(460px, calc(100% - 28px));
+    border: 0;
+    border-radius: 14px;
+    padding: 22px;
+    box-shadow: 0 18px 60px rgba(0,0,0,.28);
+}
+
+.tt-edit-dialog::backdrop {
+    background: rgba(12,18,28,.58);
+    backdrop-filter: blur(2px);
+}
+
+.tt-edit-dialog form {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+}
+
+.tt-dialog-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 8px;
+}
+
+.tt-dialog-header h3 {
+    margin: 0 0 5px;
+}
+
+.tt-dialog-header p {
+    margin: 0;
+    font-size: 13px;
+    opacity: .72;
+}
+
+.tt-close-btn {
+    border: 0;
+    background: transparent;
+    font-size: 27px;
+    cursor: pointer;
+    line-height: 1;
+}
+
+.tt-edit-dialog label {
+    font-size: 13px;
+    font-weight: 600;
+    margin-top: 4px;
+}
+
+.tt-edit-dialog select {
+    width: 100%;
+    padding: 10px 11px;
+    border: 1px solid #d4d8df;
+    border-radius: 8px;
+    background: white;
+    color: #222;
+}
+
+.tt-dialog-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 9px;
+    margin-top: 14px;
+}
+</style>
+
+<script>
+(() => {
+    const dialog = document.getElementById("timetableEditDialog");
+    const form = document.getElementById("timetableEditForm");
+
+    const baseFormAction = form.action;
+
+    const daySelect = document.getElementById("editDay");
+    const periodSelect = document.getElementById("editPeriod");
+    const subjectSelect = document.getElementById("editSubject");
+    const teacherSelect = document.getElementById("editTeacher");
+    const roomSelect = document.getElementById("editRoom");
+
+    function filterSubjects(classId, selectedId) {
+        let selectedAvailable = false;
+
+        [...subjectSelect.options].forEach(option => {
+            const allowed = option.dataset.classId === String(classId);
+
+            option.hidden = !allowed;
+            option.disabled = !allowed;
+
+            if (allowed && option.value === String(selectedId)) {
+                selectedAvailable = true;
+            }
+        });
+
+        if (selectedAvailable) {
+            subjectSelect.value = String(selectedId);
+        } else {
+            const first = [...subjectSelect.options]
+                .find(option => !option.disabled);
+
+            if (first) {
+                subjectSelect.value = first.value;
+            }
+        }
+    }
+
+    document.querySelectorAll(".tt-edit-btn").forEach(button => {
+
+        button.addEventListener("click", () => {
+
+            const id = button.dataset.entryId;
+
+            form.action = baseFormAction.replace(/\/0$/, "/" + id);
+
+            daySelect.value = button.dataset.day;
+            periodSelect.value = button.dataset.period;
+
+            filterSubjects(
+                button.dataset.classId,
+                button.dataset.subject
+            );
+
+            teacherSelect.value = button.dataset.teacher;
+            roomSelect.value = button.dataset.room;
+
+            dialog.showModal();
+        });
+
+    });
+
+    function closeDialog() {
+        dialog.close();
+    }
+
+    document.getElementById("closeTimetableDialog")
+        .addEventListener("click", closeDialog);
+
+    document.getElementById("cancelTimetableEdit")
+        .addEventListener("click", closeDialog);
+
+    dialog.addEventListener("click", event => {
+        if (event.target === dialog) {
+            closeDialog();
+        }
+    });
+
+})();
+</script>
+
 {% endblock %}

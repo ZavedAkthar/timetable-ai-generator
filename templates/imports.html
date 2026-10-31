@@ -1,0 +1,752 @@
+{% extends "base.html" %}
+
+{% block title %}Bulk Import | Timetable AI{% endblock %}
+{% block page_title %}Bulk Data Import{% endblock %}
+
+{% block content %}
+
+<style>
+    .import-page {
+        max-width: 1250px;
+        margin: 0 auto;
+        color: #262626;
+        font-family: 'Courier Prime', monospace;
+    }
+
+    .import-intro {
+        margin-bottom: 28px;
+    }
+
+    .import-intro h1 {
+        font-family: 'Newsreader', serif;
+        font-size: 36px;
+        font-weight: 700;
+        margin: 0 0 8px;
+        color: #222;
+    }
+
+    .import-intro p {
+        color: #555;
+        font-size: 14px;
+        line-height: 1.7;
+    }
+
+    /* STEP CARDS */
+
+    .steps-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 18px;
+        margin-bottom: 25px;
+    }
+
+    .step-card {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 20px;
+        border-radius: 17px;
+        background: rgba(255,255,255,0.65);
+        border: 1px solid rgba(255,255,255,0.9);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.04);
+        transition: 0.25s;
+    }
+
+    .step-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 28px rgba(0,0,0,0.08);
+    }
+
+    .step-number {
+        width: 43px;
+        height: 43px;
+        flex-shrink: 0;
+        border-radius: 13px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #f7943d, #ed2635);
+        color: white;
+        font-weight: 700;
+        font-size: 15px;
+    }
+
+    .step-card h4 {
+        font-size: 14px;
+        margin: 0 0 5px;
+        color: #262626;
+    }
+
+    .step-card p {
+        font-size: 11px;
+        color: #777;
+        margin: 0;
+        line-height: 1.5;
+    }
+
+    /* MAIN CARDS */
+
+    .import-card {
+        background: rgba(255,255,255,0.68);
+        border: 1px solid rgba(255,255,255,0.95);
+        border-radius: 19px;
+        padding: 25px;
+        margin-bottom: 23px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.045);
+        backdrop-filter: blur(12px);
+    }
+
+    .card-heading {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        margin-bottom: 22px;
+    }
+
+    .card-icon {
+        width: 46px;
+        height: 46px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 14px;
+        background: linear-gradient(135deg, #f7943d, #ed2635);
+        color: white;
+        font-size: 21px;
+        flex-shrink: 0;
+    }
+
+    .card-heading h3 {
+        font-family: 'Newsreader', serif;
+        font-size: 21px;
+        color: #252525;
+        margin: 0 0 5px;
+    }
+
+    .card-heading p {
+        color: #777;
+        font-size: 12px;
+        margin: 0;
+    }
+
+    /* BUTTONS */
+
+    .import-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 9px;
+        padding: 12px 21px;
+        border: none;
+        border-radius: 30px;
+        background: linear-gradient(110deg, #f7943d, #ed2635);
+        color: white;
+        font-family: 'Courier Prime', monospace;
+        font-weight: 700;
+        font-size: 13px;
+        text-decoration: none;
+        cursor: pointer;
+        transition: 0.25s;
+        box-shadow: 0 6px 15px rgba(237,38,53,0.16);
+    }
+
+    .import-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 9px 20px rgba(237,38,53,0.25);
+        color: white;
+    }
+
+    .download-area {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+        flex-wrap: wrap;
+    }
+
+    .download-info {
+        font-size: 13px;
+        line-height: 1.9;
+        color: #555;
+    }
+
+    .download-info strong {
+        color: #252525;
+    }
+
+    /* UPLOAD AREA */
+
+    .upload-area {
+        padding: 42px 20px;
+        text-align: center;
+        border: 2px dashed #e7a17e;
+        border-radius: 16px;
+        background: rgba(255,245,239,0.55);
+        transition: 0.25s;
+    }
+
+    .upload-area:hover,
+    .upload-area.dragover {
+        border-color: #ed3540;
+        background: rgba(255,230,220,0.75);
+    }
+
+    .upload-icon {
+        font-size: 42px;
+        margin-bottom: 12px;
+    }
+
+    .upload-area h4 {
+        font-family: 'Newsreader', serif;
+        font-size: 21px;
+        color: #292929;
+        margin: 0 0 9px;
+    }
+
+    .upload-area p {
+        font-size: 12px;
+        color: #777;
+        margin-bottom: 19px;
+    }
+
+    .file-input {
+        display: none;
+    }
+
+    .file-label {
+        display: inline-block;
+        padding: 11px 20px;
+        border-radius: 30px;
+        border: 1px solid #ed3540;
+        background: white;
+        color: #e83b3f;
+        font-size: 12px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+
+    .file-label:hover {
+        background: #ed3540;
+        color: white;
+    }
+
+    .file-name {
+        margin-top: 16px;
+        font-size: 12px;
+        color: #d94b32;
+        overflow-wrap: anywhere;
+    }
+
+    .upload-submit {
+        margin-top: 20px;
+    }
+
+    /* ALERTS */
+
+    .alert-box {
+        padding: 18px 22px;
+        border-radius: 13px;
+        margin-bottom: 20px;
+        font-size: 13px;
+        line-height: 1.8;
+    }
+
+    .error-box {
+        background: #fff0ee;
+        border: 1px solid #f2aaa2;
+        color: #a52d25;
+    }
+
+    .success-box {
+        background: #eff8ee;
+        border: 1px solid #a5d3a0;
+        color: #326b36;
+    }
+
+    .alert-box h4 {
+        margin: 0 0 8px;
+        font-family: 'Newsreader', serif;
+        font-size: 19px;
+    }
+
+    /* PREVIEW */
+
+    .preview-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 15px;
+        flex-wrap: wrap;
+        margin-bottom: 22px;
+    }
+
+    .preview-header h3 {
+        font-family: 'Newsreader', serif;
+        font-size: 25px;
+        color: #252525;
+        margin: 0 0 6px;
+    }
+
+    .preview-header p {
+        color: #777;
+        font-size: 12px;
+        margin: 0;
+    }
+
+    .sheet-section {
+        margin-top: 25px;
+    }
+
+    .sheet-title {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 12px;
+    }
+
+    .sheet-title h4 {
+        font-family: 'Newsreader', serif;
+        font-size: 18px;
+        color: #292929;
+        margin: 0;
+    }
+
+    .record-count {
+        font-size: 11px;
+        padding: 6px 12px;
+        border-radius: 20px;
+        color: #d83a35;
+        background: #fff0e9;
+        border: 1px solid #f3c3ad;
+        white-space: nowrap;
+    }
+
+    .table-wrapper {
+        overflow-x: auto;
+        border: 1px solid #e8e1dc;
+        border-radius: 11px;
+        background: rgba(255,255,255,0.7);
+    }
+
+    .preview-table {
+        width: 100%;
+        min-width: 500px;
+        border-collapse: collapse;
+        font-size: 12px;
+    }
+
+    .preview-table th {
+        background: #f8e7dc;
+        color: #963d31;
+        text-align: left;
+        padding: 13px;
+        white-space: nowrap;
+        font-weight: 700;
+    }
+
+    .preview-table td {
+        padding: 12px 13px;
+        color: #414141;
+        border-top: 1px solid #eee7e2;
+        white-space: nowrap;
+    }
+
+    .preview-table tr:hover td {
+        background: #fff7f1;
+    }
+
+    .confirm-area {
+        margin-top: 27px;
+        padding-top: 22px;
+        border-top: 1px solid #e8ddd6;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 15px;
+        flex-wrap: wrap;
+    }
+
+    .confirm-area p {
+        color: #777;
+        font-size: 12px;
+        margin: 0;
+    }
+
+    @media(max-width: 850px) {
+        .steps-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .import-intro h1 {
+            font-size: 29px;
+        }
+
+        .import-card {
+            padding: 19px;
+        }
+    }
+</style>
+
+
+<div class="import-page">
+
+    <!-- INTRO -->
+
+    <div class="import-intro">
+        <h1>Bulk Data Import</h1>
+        <p>
+            Manage your academic data efficiently.
+            Upload your Excel workbook and import multiple records at once.
+        </p>
+    </div>
+
+
+    <!-- STEPS -->
+
+    <div class="steps-grid">
+
+        <div class="step-card">
+            <div class="step-number">01</div>
+            <div>
+                <h4>Download Template</h4>
+                <p>Get the predefined Excel workbook.</p>
+            </div>
+        </div>
+
+        <div class="step-card">
+            <div class="step-number">02</div>
+            <div>
+                <h4>Upload Workbook</h4>
+                <p>Add your academic information.</p>
+            </div>
+        </div>
+
+        <div class="step-card">
+            <div class="step-number">03</div>
+            <div>
+                <h4>Preview & Import</h4>
+                <p>Review and save your records.</p>
+            </div>
+        </div>
+
+    </div>
+
+
+    <!-- DOWNLOAD TEMPLATE -->
+
+    <div class="import-card">
+
+        <div class="card-heading">
+            <div class="card-icon">↓</div>
+            <div>
+                <h3>Download Excel Template</h3>
+                <p>Start with our predefined workbook structure.</p>
+            </div>
+        </div>
+
+        <div class="download-area">
+
+            <div class="download-info">
+                <strong>Worksheets included:</strong><br>
+                Teachers · Classes · Rooms · Subjects · Time Slots · Teacher Availability
+            </div>
+
+            <a href="{{ url_for('imports.download_template') }}"
+               class="import-btn">
+                ↓ Download Template
+            </a>
+
+        </div>
+
+    </div>
+
+
+    <!-- UPLOAD WORKBOOK -->
+
+    <div class="import-card">
+
+        <div class="card-heading">
+            <div class="card-icon">↑</div>
+            <div>
+                <h3>Upload Excel Workbook</h3>
+                <p>Select your completed Excel file to continue.</p>
+            </div>
+        </div>
+
+        <form method="POST"
+              action="{{ url_for('imports.upload_excel') }}"
+              enctype="multipart/form-data">
+
+            <div class="upload-area" id="dropArea">
+
+                <div class="upload-icon">📊</div>
+
+                <h4>Drag & Drop Your Excel File</h4>
+
+                <p>Supported format: .xlsx · Maximum size: 5 MB</p>
+
+                <label for="excelFile" class="file-label">
+                    Browse Files
+                </label>
+
+                <input
+                    type="file"
+                    id="excelFile"
+                    name="excel_file"
+                    class="file-input"
+                    accept=".xlsx"
+                    required
+                >
+
+                <div class="file-name" id="fileName">
+                    No file selected
+                </div>
+
+            </div>
+
+            <div class="upload-submit">
+                <button type="submit" class="import-btn">
+                    Upload & Preview →
+                </button>
+            </div>
+
+        </form>
+
+    </div>
+
+
+    <!-- ERRORS -->
+
+    {% if errors %}
+
+    <div class="alert-box error-box">
+        <h4>⚠ Validation Errors</h4>
+
+        <ul>
+            {% for error in errors %}
+            <li>{{ error }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    {% endif %}
+
+
+    <!-- SUCCESS -->
+
+    {% if success %}
+<div class="card p-4 mt-4">
+
+    <h4 style="color: #218838;">
+        ✓ Import Completed Successfully!
+    </h4>
+
+    <p>
+        New records have been saved. Existing records were skipped.
+    </p>
+
+    <h5 class="mt-3">Import Summary</h5>
+
+    <div class="table-responsive">
+        <table class="table table-bordered">
+
+            <thead>
+                <tr>
+                    <th>Worksheet</th>
+                    <th>Imported</th>
+                    <th>Skipped</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for sheet, count in counts.items() %}
+                <tr>
+                    <td>{{ sheet }}</td>
+                    <td style="color: green;">
+                        {{ count }}
+                    </td>
+                    <td style="color: #d9534f;">
+                        {{ skipped.get(sheet, 0) }}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+
+        </table>
+    </div>
+
+    <a href="{{ url_for('imports.index') }}"
+       class="btn btn-primary">
+        Upload Another Workbook
+    </a>
+
+</div>
+{% endif %}
+
+
+    <!-- PREVIEW -->
+
+    {% if preview %}
+
+    <div class="import-card">
+
+        <div class="preview-header">
+            <div>
+                <h3>Data Preview</h3>
+                <p>Review your uploaded records before importing.</p>
+            </div>
+
+            <span class="record-count">Ready for Review</span>
+        </div>
+
+
+        {% for sheet_name, records in preview.items() %}
+
+        <div class="sheet-section">
+
+            <div class="sheet-title">
+                <h4>{{ sheet_name }}</h4>
+
+                <span class="record-count">
+                    {{ records|length }} Records
+                </span>
+            </div>
+
+            {% if records %}
+
+            <div class="table-wrapper">
+
+                <table class="preview-table">
+
+                    <thead>
+                        <tr>
+                            {% for column in records[0].keys() %}
+                                {% if column != "_row_number" %}
+                                <th>
+                                    {{ column|replace('_', ' ')|title }}
+                                </th>
+                                {% endif %}
+                            {% endfor %}
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        {% for record in records[:10] %}
+
+                        <tr>
+                            {% for column, value in record.items() %}
+                                {% if column != "_row_number" %}
+                                <td>
+                                    {{ value if value is not none else '-' }}
+                                </td>
+                                {% endif %}
+                            {% endfor %}
+                        </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+            {% endif %}
+
+            {% if records|length > 10 %}
+            <p style="font-size:11px;color:#777;margin-top:8px;">
+                Showing 10 of {{ records|length }} records.
+            </p>
+            {% endif %}
+
+        </div>
+
+        {% endfor %}
+
+
+        <div class="confirm-area">
+
+            <p>
+                Please verify all records before importing them into the database.
+            </p>
+
+            <form method="POST"
+                  action="{{ url_for('imports.confirm_import') }}">
+
+                <button type="submit" class="import-btn">
+                    ✓ Confirm & Import Data
+                </button>
+
+            </form>
+
+        </div>
+
+    </div>
+
+    {% endif %}
+
+</div>
+
+
+<!-- FILE UPLOAD SCRIPT -->
+
+<script>
+    const fileInput = document.getElementById("excelFile");
+    const fileName = document.getElementById("fileName");
+    const dropArea = document.getElementById("dropArea");
+
+    fileInput.addEventListener("change", function () {
+
+        if (this.files.length > 0) {
+
+            const file = this.files[0];
+
+            fileName.textContent = "✓ Selected: " + file.name;
+
+        } else {
+
+            fileName.textContent = "No file selected";
+
+        }
+
+    });
+
+
+    dropArea.addEventListener("dragover", function (event) {
+
+        event.preventDefault();
+        dropArea.classList.add("dragover");
+
+    });
+
+
+    dropArea.addEventListener("dragleave", function () {
+
+        dropArea.classList.remove("dragover");
+
+    });
+
+
+    dropArea.addEventListener("drop", function (event) {
+
+        event.preventDefault();
+
+        dropArea.classList.remove("dragover");
+
+        const files = event.dataTransfer.files;
+
+        if (files.length > 0) {
+
+            fileInput.files = files;
+
+            fileInput.dispatchEvent(new Event("change"));
+
+        }
+
+    });
+</script>
+
+{% endblock %}

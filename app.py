@@ -1,7 +1,7 @@
 from flask import Flask
 
 from config import Config
-
+from routes.imports import imports_bp
 from routes.dashboard import dashboard_bp
 from routes.teachers import teachers_bp
 from routes.classes import classes_bp
@@ -26,6 +26,7 @@ def create_app():
         rooms_bp,
         constraints_bp,
         timetable_bp,
+         imports_bp,
     )
 
     for blueprint in blueprints:
